@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wind/newsgroup_list_view.dart';
 import 'package:wind/nntp_client.dart';
 import 'package:wind/thread_list_view.dart';
+import 'package:wind/thread_model.dart';
 import 'package:wind/thread_screen.dart';
 
 import 'thread_list_model.dart';
@@ -12,6 +13,12 @@ void main() {
     Provider<NNTPClient>(create: ((context) => NNTPClient("localhost:1120"))),
     ChangeNotifierProxyProvider<NNTPClient, ThreadListModel>(
         create: (context) => ThreadListModel(),
+        update: (context, client, model) {
+          model!.client = client;
+          return model;
+        }),
+    ChangeNotifierProxyProvider<NNTPClient, ThreadModel>(
+        create: (context) => ThreadModel(),
         update: (context, client, model) {
           model!.client = client;
           return model;

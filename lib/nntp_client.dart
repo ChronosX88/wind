@@ -126,6 +126,31 @@ class NNTPClient {
 
     return threads;
   }
+
+  Future<List<Tuple2<int, MimeMessage>>> getThread(
+      int threadNumber) async {
+    if (currentGroup == null) throw new ArgumentError("current group is null");
+
+    List<Tuple2<int, MimeMessage>> threads = [];
+
+    var newThreadList = await _sendCommand(
+        "THREAD", [threadNumber.toString()]);
+
+    newThreadList.lines.removeAt(0);
+    newThreadList.lines.removeLast(); // remove dot
+
+    await Future.forEach<String>(newThreadList.lines, (element) async {
+      await _sendCommand("ARTICLE", [element]).then((response) {
+        response.lines.removeAt(0);
+        response.lines.removeLast();
+        var rawMsg = response.lines.join("\r\n");
+        threads
+            .add(Tuple2(int.parse(element), MimeMessage.parseFromText(rawMsg)));
+      });
+    });
+
+    return threads;
+  }
 }
 
 class _NNTPCommand {

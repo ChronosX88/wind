@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wind/thread_list_model.dart';
+import 'package:wind/thread_screen.dart';
 
 class ThreadListView extends StatefulWidget {
   @override
@@ -96,7 +97,8 @@ class ThreadListItemView extends StatelessWidget {
         elevation: 5,
         child: InkWell(
           splashColor: Colors.indigo.withAlpha(30),
-          onTap: () => Navigator.pushNamed(context, "/thread"),
+          onTap: () => Navigator.pushNamed(context, "/thread",
+              arguments: ThreadScreenArguments(item)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -123,6 +125,11 @@ class ThreadListItemView extends StatelessWidget {
                       item.date,
                       style: TextStyle(fontSize: 15),
                     ),
+                    SizedBox(width: 5),
+                    Text(
+                      "#${item.number}",
+                      style: TextStyle(fontSize: 15, color: Colors.grey),
+                    )
                   ],
                 ),
                 margin: EdgeInsets.only(top: 5, bottom: 2, left: 16, right: 16),
