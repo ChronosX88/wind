@@ -1,10 +1,15 @@
 import 'dart:async';
 import 'dart:collection';
+import 'package:enough_mail/mime_message.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:tuple/tuple.dart';
 
 class NNTPClient {
   late WebSocketChannel _channel;
   final Queue<_NNTPCommand> commandQueue = new Queue();
+  final List<String> tempBuffer = [];
+
+  String? currentGroup;
 
   NNTPClient(String addr) {
     _channel = WebSocketChannel.connect(
@@ -12,14 +17,30 @@ class NNTPClient {
     );
 
     _channel.stream.listen((data) {
-      if ((data as String).contains("201")) {
+      if ((data as String).startsWith("201")) {
         // skip welcome message
         return;
       }
-      var command = commandQueue.removeFirst();
       var resp = data.toString();
       var respLines = resp.split("\r\n");
-      respLines.removeWhere((element) => element == "");
+      if (respLines.last == "") respLines.removeLast(); // trailing empty line
+
+      if ((respLines.length > 1 || tempBuffer.isNotEmpty) &&
+          respLines.last.codeUnits.last != ".".codeUnits.first) {
+        // if it's multiline response and it doesn't contain dot in the end
+        // then looks like we need to wait for next message to concatenate with current msg
+        tempBuffer.add(resp);
+        return;
+      }
+
+      if (tempBuffer.isNotEmpty) {
+        tempBuffer.add(resp);
+        resp = tempBuffer.join();
+        respLines = resp.split("\r\n");
+        respLines.removeLast(); // trailing empty line
+        tempBuffer.clear();
+      }
+      var command = commandQueue.removeFirst();
       var respCode = int.parse(respLines[0].split(" ")[0]);
       command.responseCompleter.complete(_CommandResponse(respCode, respLines));
     });
@@ -75,6 +96,35 @@ class NNTPClient {
     });
 
     return l;
+  }
+
+  Future<void> selectGroup(String name) async {
+    await _sendCommand("GROUP", [name]).then((value) => {currentGroup = name});
+  }
+
+  Future<List<Tuple2<int, MimeMessage>>> getNewThreads(
+      int perPage, int pageNum) async {
+    if (currentGroup == null) throw new ArgumentError("current group is null");
+
+    List<Tuple2<int, MimeMessage>> threads = [];
+
+    var newThreadList = await _sendCommand(
+        "NEWTHREADS", [perPage.toString(), pageNum.toString()]);
+
+    newThreadList.lines.removeAt(0);
+    newThreadList.lines.removeLast(); // remove dot
+
+    await Future.forEach<String>(newThreadList.lines, (element) async {
+      await _sendCommand("ARTICLE", [element]).then((response) {
+        response.lines.removeAt(0);
+        response.lines.removeLast();
+        var rawMsg = response.lines.join("\r\n");
+        threads
+            .add(Tuple2(int.parse(element), MimeMessage.parseFromText(rawMsg)));
+      });
+    });
+
+    return threads;
   }
 }
 
