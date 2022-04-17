@@ -40,6 +40,7 @@ class NewsgroupListViewState extends State<NewsgroupListView> {
 
   Widget _newsgroupListView(List<GroupInfo> data) {
     return ListView.builder(
+        controller: ScrollController(),
         itemCount: data.length,
         itemBuilder: (context, index) {
           return ListTile(

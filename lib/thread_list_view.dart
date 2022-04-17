@@ -56,30 +56,33 @@ class ThreadListViewState extends State<ThreadListView> {
 
   Widget _threadView() {
     return _items.isNotEmpty
-        ? ListView.builder(
-            itemCount: _items.length,
-            itemBuilder: (context, index) {
-              if (_items[index].number == -100500) {
-                return Container(
-                  height: 100,
-                  padding: EdgeInsets.all(20),
-                  child: TextButton(
-                    style: ButtonStyle(
-                      foregroundColor:
-                          MaterialStateProperty.all<Color>(Colors.blue),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _pageNum += 1;
-                        _items.removeLast();
-                      });
-                    },
-                    child: Text('Load more'),
-                  ),
-                );
-              } else
-                return ThreadListItemView(item: _items[index]);
-            })
+        ? Scrollbar(
+            child: ListView.builder(
+                key: PageStorageKey("threadList"),
+                itemCount: _items.length,
+                itemBuilder: (context, index) {
+                  if (_items[index].number == -100500) {
+                    return Container(
+                      height: 100,
+                      padding: EdgeInsets.all(20),
+                      child: TextButton(
+                        style: ButtonStyle(
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.blue),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _pageNum += 1;
+                            _items.removeLast();
+                          });
+                        },
+                        child: Text('Load more'),
+                      ),
+                    );
+                  } else
+                    return ThreadListItemView(item: _items[index]);
+                }),
+          )
         : Center(
             child: Text("This newsgroup is empty",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)));
