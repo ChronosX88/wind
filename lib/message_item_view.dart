@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wind/thread_model.dart';
 
 class MessageItemView extends StatelessWidget {
   const MessageItemView({Key? key, required this.item, required this.isOpPost})
@@ -48,7 +50,12 @@ class MessageItemView extends StatelessWidget {
                           "#${item.number}",
                           style: TextStyle(fontSize: 15, color: Colors.grey),
                         ),
-                        onTap: () => {},
+                        onTap: () {
+                          var model =
+                              Provider.of<ThreadModel>(context, listen: false);
+                          model.commentTextController.text +=
+                              ">>${item.number}\n";
+                        },
                       )
                     ],
                   ),

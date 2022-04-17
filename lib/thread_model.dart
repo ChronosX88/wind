@@ -5,12 +5,7 @@ import 'package:wind/nntp_client.dart';
 class ThreadModel extends ChangeNotifier {
   NNTPClient? client;
 
-  String _commentText = "";
-  String get commentText => _commentText;
-  set commentText(String text) {
-    _commentText = text;
-    notifyListeners();
-  }
+  var commentTextController = TextEditingController(text: "");
 
   Future<MessageItem> getPost(int number) async {
     var msg = await client!.getPost(number);
