@@ -127,14 +127,18 @@ class NNTPClient {
     return threads;
   }
 
-  Future<List<Tuple2<int, MimeMessage>>> getThread(
-      int threadNumber) async {
+  Future<MimeMessage> getPost(int postNumber) async {
+    var resp = await _sendCommand("ARTICLE", [postNumber.toString()]);
+    resp.lines.removeLast();
+    return MimeMessage.parseFromText(resp.lines.join("\r\n"));
+  }
+
+  Future<List<Tuple2<int, MimeMessage>>> getThread(int threadNumber) async {
     if (currentGroup == null) throw new ArgumentError("current group is null");
 
     List<Tuple2<int, MimeMessage>> threads = [];
 
-    var newThreadList = await _sendCommand(
-        "THREAD", [threadNumber.toString()]);
+    var newThreadList = await _sendCommand("THREAD", [threadNumber.toString()]);
 
     newThreadList.lines.removeAt(0);
     newThreadList.lines.removeLast(); // remove dot

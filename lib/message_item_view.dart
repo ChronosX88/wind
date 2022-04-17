@@ -13,56 +13,55 @@ class MessageItemView extends StatelessWidget {
         margin: this.isOpPost ? EdgeInsets.only(bottom: 10) : EdgeInsets.all(0),
         child: Card(
             elevation: 5,
-            child: InkWell(
-              splashColor: Colors.indigo.withAlpha(30),
-              onTap: () => {},
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  isOpPost
-                      ? Container(
-                          child: Text(
-                            item.subject!,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 21),
-                          ),
-                          margin: EdgeInsets.only(top: 16, left: 16, right: 16),
-                        )
-                      : Container(),
-                  Container(
-                    child: Row(
-                      children: [
-                        Text(
-                          item.author,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                isOpPost
+                    ? Container(
+                        child: Text(
+                          item.subject!,
                           style: TextStyle(
-                              fontWeight: FontWeight.normal,
-                              color: Colors.blue,
-                              fontSize: 15),
+                              fontWeight: FontWeight.bold, fontSize: 21),
                         ),
-                        SizedBox(width: 5),
-                        Text(
-                          item.date,
-                          style: TextStyle(fontSize: 15),
-                        ),
-                        SizedBox(width: 5),
-                        Text(
+                        margin: EdgeInsets.only(top: 16, left: 16, right: 16),
+                      )
+                    : Container(),
+                Container(
+                  child: Row(
+                    children: [
+                      Text(
+                        item.author,
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            color: Colors.blue,
+                            fontSize: 15),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        item.date,
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      SizedBox(width: 5),
+                      InkWell(
+                        child: Text(
                           "#${item.number}",
                           style: TextStyle(fontSize: 15, color: Colors.grey),
-                        )
-                      ],
-                    ),
-                    margin: isOpPost
-                        ? EdgeInsets.only(
-                            top: 5, bottom: 2, left: 16, right: 16)
-                        : EdgeInsets.only(top: 16, left: 16),
+                        ),
+                        onTap: () => {},
+                      )
+                    ],
                   ),
-                  Container(
-                    child: Text(item.body, style: TextStyle(fontSize: 17)),
-                    margin: EdgeInsets.all(16),
-                  )
-                ],
-              ),
+                  margin: isOpPost
+                      ? EdgeInsets.only(top: 5, bottom: 2, left: 16, right: 16)
+                      : EdgeInsets.only(top: 16, left: 16),
+                ),
+                Container(
+                  child:
+                      SelectableText(item.body, style: TextStyle(fontSize: 17)),
+                  margin: EdgeInsets.all(16),
+                )
+              ],
             )));
   }
 }

@@ -100,8 +100,8 @@ class ThreadListItemView extends StatelessWidget {
         elevation: 5,
         child: InkWell(
           splashColor: Colors.indigo.withAlpha(30),
-          onTap: () => Navigator.pushNamed(context, "/thread",
-              arguments: ThreadScreenArguments(item)),
+          onTap: () =>
+              Navigator.pushNamed(context, "/thread?num=${item.number}"),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

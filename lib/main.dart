@@ -36,7 +36,27 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
       ),
       home: MyHomePage(title: 'Wind'),
-      routes: {'/thread': (context) => ThreadScreen()},
+      onGenerateRoute: (settings) {
+        Widget? pageView;
+        if (settings.name != null) {
+          var uriData = Uri.parse(settings.name!);
+
+          switch (uriData.path) {
+            case '/thread':
+              pageView = ThreadScreen(
+                  threadNumber:
+                      int.parse(uriData.queryParametersAll['num']!.first));
+              break;
+            default:
+              pageView = MyHomePage(title: 'Wind');
+              break;
+          }
+        }
+        if (pageView != null) {
+          return MaterialPageRoute(
+              settings: settings, builder: (BuildContext context) => pageView!);
+        }
+      },
     );
   }
 }
