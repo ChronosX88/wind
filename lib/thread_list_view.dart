@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wind/thread_list_model.dart';
-import 'package:wind/thread_screen.dart';
 
 class ThreadListView extends StatefulWidget {
   @override
@@ -9,8 +8,6 @@ class ThreadListView extends StatefulWidget {
 }
 
 class ThreadListViewState extends State<ThreadListView> {
-  List<ThreadItem> _items = [];
-  int _pageNum = 0;
   String _curGroup = "";
 
   @override
@@ -24,16 +21,13 @@ class ThreadListViewState extends State<ThreadListView> {
             if (snapshot.hasData &&
                 snapshot.connectionState != ConnectionState.waiting) {
               List<ThreadItem> data = List.from(snapshot.data!);
-              _items.addAll(data);
-              if (_items.isNotEmpty &&
-                  _items.last.number != -100500 &&
-                  data.isNotEmpty)
-                _items.add(ThreadItem("", -100500, "", "", "",
+              if (data.isNotEmpty && data.last.number != -100500)
+                data.add(ThreadItem("", -100500, "", "", "",
                     "")); // magic item (for button "load more")
               return _curGroup != ""
-                  ? _threadView()
+                  ? _threadView(data)
                   : Center(
-                      child: Text("Newsgroup is not selected",
+                      child: Text("Новостная группа не выбрана",
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16)));
             } else if (snapshot.hasError) {
@@ -46,22 +40,18 @@ class ThreadListViewState extends State<ThreadListView> {
 
   Future<List<ThreadItem>> _fetchThreadList(BuildContext context) async {
     var model = context.read<ThreadListModel>();
-    if (model.currentGroup != _curGroup) {
-      _items.clear();
-      _curGroup = model.currentGroup;
-      _pageNum = 0;
-    }
-    return await model.getNewThreads(10, _pageNum, false);
+    _curGroup = model.currentGroup;
+    return await model.getNewThreads(false);
   }
 
-  Widget _threadView() {
-    return _items.isNotEmpty
+  Widget _threadView(List<ThreadItem> items) {
+    return items.isNotEmpty
         ? Scrollbar(
             child: ListView.builder(
                 key: PageStorageKey("threadList"),
-                itemCount: _items.length,
+                itemCount: items.length,
                 itemBuilder: (context, index) {
-                  if (_items[index].number == -100500) {
+                  if (items[index].number == -100500) {
                     return Container(
                       height: 100,
                       padding: EdgeInsets.all(20),
@@ -72,19 +62,18 @@ class ThreadListViewState extends State<ThreadListView> {
                         ),
                         onPressed: () {
                           setState(() {
-                            _pageNum += 1;
-                            _items.removeLast();
+                            items.removeLast();
                           });
                         },
-                        child: Text('Load more'),
+                        child: Text('Загрузить больше'),
                       ),
                     );
                   } else
-                    return ThreadListItemView(item: _items[index]);
+                    return ThreadListItemView(item: items[index]);
                 }),
           )
         : Center(
-            child: Text("This newsgroup is empty",
+            child: Text("Эта новостная группа пуста",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)));
   }
 }

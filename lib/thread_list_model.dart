@@ -6,6 +6,8 @@ class ThreadListModel extends ChangeNotifier {
   String currentGroup = "";
   NNTPClient? client;
   Map<String, Map<int, List<ThreadItem>>> threads = {};
+  int _pageNum = -1;
+  List<ThreadItem> _curItems = [];
 
   Future<void> selectNewsgroup(String name) async {
     if (currentGroup == name) return;
@@ -13,27 +15,29 @@ class ThreadListModel extends ChangeNotifier {
     currentGroup = name;
     await client!.selectGroup(name);
     threads.putIfAbsent(name, () => {});
+    _curItems.clear();
+    _pageNum = -1;
 
     notifyListeners();
   }
 
-  Future<List<ThreadItem>> getNewThreads(
-      int perPage, int pageNum, bool clearCache) async {
+  Future<List<ThreadItem>> getNewThreads(bool clearCache) async {
     if (currentGroup == "") return [];
-    List<ThreadItem> items = [];
+
+    _pageNum += 1;
 
     if (clearCache) {
       threads[currentGroup]?.clear();
     }
 
-    if (threads[currentGroup]!.containsKey(pageNum)) {
-      items.addAll(threads[currentGroup]![pageNum]!);
+    if (threads[currentGroup]!.containsKey(_pageNum)) {
+      _curItems.addAll(threads[currentGroup]![_pageNum]!);
     } else {
-      var resp = await client!.getNewThreads(perPage, pageNum);
+      var resp = await client!.getNewThreads(10, _pageNum);
       resp.forEach((pair) {
         var number = pair.item1;
         var msg = pair.item2;
-        items.add(ThreadItem(
+        _curItems.add(ThreadItem(
             msg.getHeaderValue("Message-Id")!,
             number,
             msg.getHeaderValue("Subject")!,
@@ -42,9 +46,18 @@ class ThreadListModel extends ChangeNotifier {
             msg.decodeTextPlainPart()!));
       });
 
-      threads[currentGroup]![pageNum] = items;
+      if (resp.isEmpty) _pageNum -= 1;
+
+      threads[currentGroup]![_pageNum] = List.from(_curItems);
     }
 
-    return items;
+    return _curItems;
+  }
+
+  void update() {
+    _curItems.clear();
+    _pageNum = -1;
+    threads[currentGroup]!.clear();
+    notifyListeners();
   }
 }

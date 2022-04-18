@@ -93,6 +93,20 @@ class _MyHomePageState extends State<MyHomePage> {
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           title: Text(widget.title),
+          actions: [
+            TextButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Обновление списка тредов...')),
+                  );
+                  Provider.of<ThreadListModel>(context, listen: false).update();
+                },
+                label: const Text("Обновить"),
+                style: TextButton.styleFrom(
+                    primary: Theme.of(context).colorScheme.onPrimary),
+                icon: Icon(Icons.sync))
+          ],
         ),
         body: Center(
           child: Container(
