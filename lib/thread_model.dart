@@ -53,4 +53,8 @@ class ThreadModel extends ChangeNotifier {
     msg.addHeader("Newsgroups", client!.currentGroup!);
     return await client!.postArticle(msg);
   }
+
+  void update() {
+    notifyListeners();
+  }
 }

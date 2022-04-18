@@ -22,36 +22,55 @@ class ThreadScreen extends StatefulWidget {
 
 class ThreadScreenState extends State<ThreadScreen> {
   ThreadScreenState(this.threadNumber);
+
+  late ThreadModel model;
   late int threadNumber;
 
   @override
   Widget build(BuildContext context) {
+    model = Provider.of<ThreadModel>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Thread #${this.threadNumber}"),
+        title: Text("Тред #${this.threadNumber}"),
+        actions: [
+          TextButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Обновление треда...')),
+                );
+                model.update();
+              },
+              label: const Text("Обновить"),
+              style: TextButton.styleFrom(
+                  primary: Theme.of(context).colorScheme.onPrimary),
+              icon: Icon(Icons.sync))
+        ],
       ),
       body: Center(
           child: Container(
         width: 650,
-        child: FutureBuilder<List<MessageItem>>(
-          future: _fetch(context),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              List<MessageItem> data = List.from(snapshot.data!);
-              data.insert(1, MessageItem("reply", 0, "", "", "", "")); // reply
-              return _listView(data);
-            } else if (snapshot.hasError) {
-              return Text("${snapshot.error}");
-            }
-            return Center(child: CircularProgressIndicator());
-          },
-        ),
+        child: Consumer<ThreadModel>(
+            builder: ((context, value, child) =>
+                FutureBuilder<List<MessageItem>>(
+                  future: _fetch(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      List<MessageItem> data = List.from(snapshot.data!);
+                      data.insert(
+                          1, MessageItem("reply", 0, "", "", "", "")); // reply
+                      return _listView(data);
+                    } else if (snapshot.hasError) {
+                      return Text("${snapshot.error}");
+                    }
+                    return Center(child: CircularProgressIndicator());
+                  },
+                ))),
       )),
     );
   }
 
   Future<List<MessageItem>> _fetch(BuildContext context) async {
-    var model = context.read<ThreadModel>();
     List<MessageItem> posts = [];
 
     var threadPosts = await model.getThread(threadNumber);
@@ -145,13 +164,16 @@ class SendMessageFormState extends State<SendMessageForm> {
                                           listen: false)
                                       .postMessage(opPost,
                                           value.commentTextController.text)
-                                      .then((value) {
-                                    if (value == 240) {
+                                      .then((responseCode) {
+                                    if (responseCode == 240) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
                                             content: Text('Пост отправлен!')),
                                       );
+                                      Provider.of<ThreadModel>(context,
+                                              listen: false)
+                                          .update();
                                     }
                                   });
                                   value.commentTextController.text = "";
