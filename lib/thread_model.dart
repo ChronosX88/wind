@@ -1,3 +1,4 @@
+import 'package:enough_mail/enough_mail.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:wind/message_item_view.dart';
 import 'package:wind/nntp_client.dart';
@@ -9,13 +10,15 @@ class ThreadModel extends ChangeNotifier {
 
   Future<MessageItem> getPost(int number) async {
     var msg = await client!.getPost(number);
-    return MessageItem(
+    var mi = MessageItem(
         msg.getHeaderValue("Message-Id")!,
         number,
         msg.getHeaderValue("Subject")!,
         msg.getHeaderValue("From")!,
         msg.getHeaderValue("Date")!,
         msg.decodeTextPlainPart()!);
+    mi.originalMessage = msg;
+    return mi;
   }
 
   Future<List<MessageItem>> getThread(int threadNumber) async {
@@ -38,5 +41,16 @@ class ThreadModel extends ChangeNotifier {
     });
 
     return items;
+  }
+
+  Future<int> postMessage(MimeMessage opPost, String text) async {
+    var msg = MessageBuilder.buildSimpleTextMessage(
+        MailAddress.empty(), [], text,
+        subject: "Re: " + opPost.decodeSubject()!);
+    msg.setHeader("From", "anonymous");
+    msg.addHeader("In-Reply-To", opPost.getHeaderValue("Message-Id"));
+    msg.addHeader("References", opPost.getHeaderValue("Message-Id"));
+    msg.addHeader("Newsgroups", client!.currentGroup!);
+    return await client!.postArticle(msg);
   }
 }

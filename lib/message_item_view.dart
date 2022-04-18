@@ -1,18 +1,28 @@
+import 'package:enough_mail/enough_mail.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wind/thread_model.dart';
 
 class MessageItemView extends StatelessWidget {
-  const MessageItemView({Key? key, required this.item, required this.isOpPost})
+  const MessageItemView(
+      {Key? key,
+      required this.item,
+      required this.isOpPost,
+      required this.isLast})
       : super(key: key);
 
   final MessageItem item;
   final bool isOpPost;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-        margin: this.isOpPost ? EdgeInsets.only(bottom: 10) : EdgeInsets.all(0),
+        margin: this.isOpPost
+            ? EdgeInsets.only(bottom: 10, left: 10, right: 10, top: 16)
+            : isLast
+                ? EdgeInsets.only(left: 10, right: 10, bottom: 16)
+                : EdgeInsets.only(left: 10, right: 10),
         child: Card(
             elevation: 5,
             child: Column(
@@ -80,6 +90,8 @@ class MessageItem {
   final String author;
   final String date;
   final String body;
+
+  MimeMessage? originalMessage;
 
   MessageItem(
       this.id, this.number, this.subject, this.author, this.date, this.body);

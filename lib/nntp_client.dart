@@ -6,8 +6,8 @@ import 'package:tuple/tuple.dart';
 
 class NNTPClient {
   late WebSocketChannel _channel;
-  final Queue<_NNTPCommand> commandQueue = new Queue();
-  final List<String> tempBuffer = [];
+  final Queue<_NNTPCommand> _commandQueue = new Queue();
+  final List<String> _tempBuffer = [];
 
   String? currentGroup;
 
@@ -25,22 +25,22 @@ class NNTPClient {
       var respLines = resp.split("\r\n");
       if (respLines.last == "") respLines.removeLast(); // trailing empty line
 
-      if ((respLines.length > 1 || tempBuffer.isNotEmpty) &&
+      if ((respLines.length > 1 || _tempBuffer.isNotEmpty) &&
           respLines.last.codeUnits.last != ".".codeUnits.first) {
         // if it's multiline response and it doesn't contain dot in the end
         // then looks like we need to wait for next message to concatenate with current msg
-        tempBuffer.add(resp);
+        _tempBuffer.add(resp);
         return;
       }
 
-      if (tempBuffer.isNotEmpty) {
-        tempBuffer.add(resp);
-        resp = tempBuffer.join();
+      if (_tempBuffer.isNotEmpty) {
+        _tempBuffer.add(resp);
+        resp = _tempBuffer.join();
         respLines = resp.split("\r\n");
         respLines.removeLast(); // trailing empty line
-        tempBuffer.clear();
+        _tempBuffer.clear();
       }
-      var command = commandQueue.removeFirst();
+      var command = _commandQueue.removeFirst();
       var respCode = int.parse(respLines[0].split(" ")[0]);
       command.responseCompleter.complete(_CommandResponse(respCode, respLines));
     });
@@ -49,7 +49,7 @@ class NNTPClient {
   Future<_CommandResponse> _sendCommand(
       String command, List<String> args) async {
     var cmd = _NNTPCommand(_CommandRequest(command, args));
-    commandQueue.add(cmd);
+    _commandQueue.add(cmd);
     if (args.length > 0) {
       _channel.sink.add("$command ${args.join(" ")}\r\n");
     } else {
@@ -154,6 +154,18 @@ class NNTPClient {
     });
 
     return threads;
+  }
+
+  Future<int> postArticle(MimeMessage message) async {
+    var resp = await _sendCommand("POST", []);
+    if (resp.responseCode != 340) return resp.responseCode;
+    var rawMessage = message.renderMessage() + "\r\n.\r\n";
+
+    _channel.sink.add(rawMessage);
+    var cmd = _NNTPCommand(_CommandRequest("POST", []));
+    _commandQueue.add(cmd);
+    resp = await cmd.response;
+    return resp.responseCode;
   }
 }
 
