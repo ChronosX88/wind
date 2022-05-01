@@ -40,7 +40,7 @@ class ThreadListModel extends ChangeNotifier {
         _curItems.add(ThreadItem(
             msg.getHeaderValue("Message-Id")!,
             number,
-            msg.getHeaderValue("Subject")!,
+            msg.decodeSubject()!,
             msg.getHeaderValue("From")!,
             msg.getHeaderValue("Date")!,
             msg.decodeTextPlainPart()!));

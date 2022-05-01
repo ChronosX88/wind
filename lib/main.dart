@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wind/create_thread_screen.dart';
 import 'package:wind/newsgroup_list_view.dart';
 import 'package:wind/nntp_client.dart';
 import 'package:wind/thread_list_view.dart';
@@ -47,6 +48,9 @@ class MyApp extends StatelessWidget {
                   threadNumber:
                       int.parse(uriData.queryParametersAll['num']!.first));
               break;
+            case '/thread/create':
+              pageView = CreateThreadScreen();
+              break;
             default:
               pageView = MyHomePage(title: 'Wind');
               break;
@@ -82,64 +86,69 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-        appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: Text(widget.title),
-          actions: [
-            TextButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Обновление списка тредов...')),
-                  );
-                  Provider.of<ThreadListModel>(context, listen: false).update();
-                },
-                label: const Text("Обновить"),
-                style: TextButton.styleFrom(
-                    primary: Theme.of(context).colorScheme.onPrimary),
-                icon: Icon(Icons.sync))
-          ],
-        ),
-        body: Center(
-          child: Container(
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 300,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                          margin: EdgeInsets.all(16),
-                          child: Text(
-                            "Новостные группы",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 20),
-                          )),
-                      Expanded(
-                          child: Builder(
-                              builder: (context) =>
-                                  NewsgroupListView(client: nntpClient))),
-                    ],
-                  ),
-                ),
-                const VerticalDivider(thickness: 1, width: 1),
-                Expanded(
-                    child: Center(
-                  child: Consumer<ThreadListModel>(
-                      builder: ((context, value, child) => ThreadListView())),
-                ))
-              ],
-            ),
+    return Consumer<ThreadListModel>(
+      builder: (context, value, child) => Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+            actions: value.currentGroup != ""
+                ? [
+                    TextButton.icon(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, "/thread/create"),
+                      icon: Icon(Icons.add),
+                      label: Text("Создать тред"),
+                      style: TextButton.styleFrom(
+                          primary: Theme.of(context).colorScheme.onPrimary),
+                    ),
+                    TextButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Обновление списка тредов...')),
+                          );
+                          Provider.of<ThreadListModel>(context, listen: false)
+                              .update();
+                        },
+                        label: const Text("Обновить"),
+                        style: TextButton.styleFrom(
+                            primary: Theme.of(context).colorScheme.onPrimary),
+                        icon: Icon(Icons.sync))
+                  ]
+                : [],
           ),
-        ));
+          body: Center(
+            child: Container(
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 300,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                            margin: EdgeInsets.all(16),
+                            child: Text(
+                              "Новостные группы",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 20),
+                            )),
+                        Expanded(
+                            child: Builder(
+                                builder: (context) =>
+                                    NewsgroupListView(client: nntpClient))),
+                      ],
+                    ),
+                  ),
+                  const VerticalDivider(thickness: 1, width: 1),
+                  Expanded(
+                      child: Center(
+                    child: Consumer<ThreadListModel>(
+                        builder: ((context, value, child) => ThreadListView())),
+                  ))
+                ],
+              ),
+            ),
+          )),
+    );
   }
 }

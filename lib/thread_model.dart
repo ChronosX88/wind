@@ -13,7 +13,7 @@ class ThreadModel extends ChangeNotifier {
     var mi = MessageItem(
         msg.getHeaderValue("Message-Id")!,
         number,
-        msg.getHeaderValue("Subject")!,
+        msg.decodeSubject()!,
         msg.getHeaderValue("From")!,
         msg.getHeaderValue("Date")!,
         msg.decodeTextPlainPart()!);
@@ -37,7 +37,7 @@ class ThreadModel extends ChangeNotifier {
           null,
           message.getHeaderValue("From")!,
           message.getHeaderValue("Date")!,
-          message.decodeTextPlainPart()!));
+          message.decodeTextPlainPart()!.trim()));
     });
 
     return items;
@@ -45,11 +45,20 @@ class ThreadModel extends ChangeNotifier {
 
   Future<int> postMessage(MimeMessage opPost, String text) async {
     var msg = MessageBuilder.buildSimpleTextMessage(
-        MailAddress.empty(), [], text,
+        MailAddress.empty(), [], text.trim(),
         subject: "Re: " + opPost.decodeSubject()!);
     msg.setHeader("From", "anonymous");
     msg.addHeader("In-Reply-To", opPost.getHeaderValue("Message-Id"));
     msg.addHeader("References", opPost.getHeaderValue("Message-Id"));
+    msg.addHeader("Newsgroups", client!.currentGroup!);
+    return await client!.postArticle(msg);
+  }
+
+  Future<int> createThread(String subject, String text) async {
+    var msg = MessageBuilder.buildSimpleTextMessage(
+        MailAddress.empty(), [], text.trim(),
+        subject: subject);
+    msg.setHeader("From", "anonymous");
     msg.addHeader("Newsgroups", client!.currentGroup!);
     return await client!.postArticle(msg);
   }

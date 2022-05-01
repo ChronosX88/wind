@@ -18,7 +18,7 @@ class MessageItemView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        margin: this.isOpPost
+        padding: this.isOpPost
             ? EdgeInsets.only(bottom: 10, left: 10, right: 10, top: 16)
             : isLast
                 ? EdgeInsets.only(left: 10, right: 10, bottom: 16)
